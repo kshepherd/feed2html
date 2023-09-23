@@ -16,6 +16,7 @@ Scrapy is a well-supported, extensible Python module which can scrape web resour
 ## Goals
 
 - Turn feeds (OAI, RSS/Atom, ActivityPub) into complete static websites
+    - "Put DSpace on a CD-ROM"
 - Start with most basic requirements
 -- OAIPMH, Dublin Core elements and terms
 -- RSS 2.0 for blogs, podcasts
