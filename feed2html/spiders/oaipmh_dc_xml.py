@@ -1,7 +1,11 @@
+import pytz
+from dateutil.parser import parse, ParserError
 from typing import Optional, Any
 
 import scrapy
+from scrapy import Request
 from scrapy.selector import Selector
+
 from feed2html.items import Feed2HtmlItem
 import re
 
@@ -15,6 +19,8 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
     # Sensible default based on typical DSpace OAI PMH feeds
     identifier_xpath = 'oaipmh:header/oaipmh:identifier/text()'
     datestamp_xpath = 'oaipmh:header/oaipmh:datestamp/text()'
+    publication_date_xpath = './/dc:date/text()'
+
     extract_domain_regex = r'https?://([^/]+)'
     allowed_domains = []
     start_urls = []
@@ -23,7 +29,9 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         ('dc', 'http://purl.org/dc/elements/1.1/'),
         ('doc', 'http://www.lyncode.com/xoai')
     ]
-    itertag = "oaipmh:record"
+    resumption_xpath = "//oaipmh:resumptionToken"
+    record_xpath = "//oaipmh:record"
+    itertag = "oaipmh:OAI-PMH"
     iterator = 'xml'
 
     # Custom properties for pipelines to access when transforming or rendering documents
@@ -40,7 +48,9 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
 
     # Set up custom settings and pipelines
     custom_settings = {
-        'CLOSESPIDER_PAGECOUNT': 1,
+        'ROBOTSTXT_OBEY': False,
+        #'CLOSESPIDER_PAGECOUNT': 1,
+        #'CLOSESPIDER_ITEMCOUNT': 1,
         'ITEM_PIPELINES': {
             'feed2html.pipelines.TransformXmlPipeline': 200,
             'feed2html.pipelines.WriteToOCFLPipeline': 900,
@@ -49,7 +59,7 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
 
     def __init__(self, name: Optional[str] = None,
                  start_url='https://dspace.mit.edu/oai/request?verb=ListRecords&metadataPrefix=oai_dc',
-                 tag='oaipmh:record',
+                 tag='oaipmh:OAI-PMH',
                  website_title='OAI-PMH Feed',
                  website_subtitle='open access research',
                  path_to_assets='/tmp',
@@ -82,22 +92,92 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         super().__init__(name, **kwargs)
 
     def parse_node(self, response, node):
+        records = node.xpath(f"{self.record_xpath}")
+        resumption = node.xpath(f"{self.resumption_xpath}")
+        self.logger.error(resumption)
+        size = resumption.xpath("./@completeListSize").get()
+        self.logger.error(size)
+        token = resumption.xpath("./text()").get()
+        self.logger.error(token)
+        url = self.start_urls[0].replace('&metadataPrefix=oai_dc', '')
+        req = Request(f"{url}&resumptionToken={token}", callback=self._parse)
+        self.logger.error(req)
+
+        for record in records:
+            yield self.parse_record(response, record)
+        yield req
+
+    def parse_record(self, response, node):
         """
         Parse the XML node for a single OAI record
         :param response: the HTTP response
         :param node: the current XML node
         :return: constructed item to send to pipelines
         """
-       # self.logger.info("thing=%s", node.xpath(self.identifier_xpath).get())
-
         item = Feed2HtmlItem()
         item['id'] = node.xpath(self.identifier_xpath).extract()
         item['datestamp'] = node.xpath(self.datestamp_xpath).get()
+        # Although we let XSLT handle all the other metadata fields directly, we know from experience
+        # that dc:date in simple DC from DSpace can be an issue if the repository doesn't do its own
+        # handling to reduce them down to a single publication date. Also, we might want some more powerful
+        # parsing and formatting of date strings, and this is a lot easier to do in Python.
+        # So, we have a static function that will try to guess and format the best date.
+        # It will be passed to the XSLT as a parameter
+        item['date'] = self.guess_date(node.xpath(self.publication_date_xpath).extract(), item['id'])
         item['xml'] = node.xpath('.').get()
         # Sanitise OAI identifier so that it is a valid FS directory name
         # You might need to change this based on your own requirements and FS used
         item['ocfl_id'] = re.sub(r'[/:, ]', '_', str(item['id'][0]))
+
+        # Other spiders use yield here, but it screwed up our data handling (the 1996 date ending up in many items etc)
+        # so we are using the more straight-forward return here, to process things in strict order and return
+        # the item instead of a generator.
         return item
+
+    def guess_date(self, dates, identifier):
+        """
+        Parse a date from a list of dc:date values, and any other custom handling
+        :param dates: list of dates
+        :param identitier: used for logging date errors which can be helpful in metadata validation
+        :return: formatted date
+        """
+        parsed_dates = list()
+        if isinstance(dates, list):
+            for date in dates:
+                if len(date) == 4:
+                    # A date which is just a year, is probably what we are looking for.
+                    return date
+                # Parse the date string to a datetime object
+                try:
+                    parsed_date = parse(date).replace(tzinfo=pytz.UTC)
+                    if parsed_date is not None:
+                        parsed_dates.append(parsed_date)
+                except ParserError as error:
+                    self.logger.error(f"Could not parse date: {error}")
+                    if date is not None and len(date) > 4:
+                        try:
+                            # Hm, ok, we will just extract the first 4 consecutive numbers we see
+                            # and call it a date
+                            year_guess = re.search(r'[0-9]{4}', date)
+                            if year_guess is not None and year_guess.group():
+                                parsed_date = parse(year_guess.group()).replace(tzinfo=pytz.UTC)
+                                if parsed_date is not None:
+                                    parsed_dates.append(parsed_date)
+                        except ParserError as second_error:
+                            # OK, give up and skip this date
+                            self.logger.error(f"Could not parse partial date: {identifier}")
+
+        best_guess = None
+
+        if len(parsed_dates) > 0:
+            # Get the earliest date
+            best_guess = min(parsed_dates)
+
+        if best_guess is not None:
+            # Return just the year in this simple example
+            return best_guess.strftime("%Y")
+
+        return "Unknown date"
 
     def test(self, response):
         """

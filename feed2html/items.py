@@ -14,6 +14,9 @@ class Feed2HtmlItem(scrapy.Item):
     id = scrapy.Field()
     # Datestamp (usually the crawl datestamp)
     datestamp = scrapy.Field()
+    # Publication date - simple DC in OAI often has multiple dc:date values
+    # and guessing the publication date is easier to do in Python than in XSLT
+    date = scrapy.Field()
     # Original crawled record
     record = scrapy.Field()
     # OA URLs (e.g. Unpaywall search results)

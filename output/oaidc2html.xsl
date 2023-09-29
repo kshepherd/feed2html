@@ -7,10 +7,15 @@
     exclude-result-prefixes="oai_dc doc xsi dc"
     >
     <xsl:output method="html" indent="yes"/>
+    <!-- Parameters set in TransformXmlPipeline -->
     <xsl:param name="website_title"/>
     <xsl:param name="website_subtitle"/>
     <xsl:param name="path_to_assets"/>
+    <xsl:param name="publication_date"/>
+    <!-- Try to keep citations looking nice -->
     <xsl:preserve-space elements="dc:identifier"/>
+
+    <!-- Main template -->
     <xsl:template match="/">
         <html lang="en">
             <head>
@@ -46,7 +51,6 @@
                         <div class="header">
                             <h1 class="brand-title"><xsl:value-of select="$website_title"/></h1>
                             <h2 class="brand-tagline"><xsl:value-of select="$website_subtitle"/></h2>
-
 <!--                            <nav class="nav">-->
 <!--                                <ul class="nav-list">-->
 <!--                                    <li class="nav-item">-->
@@ -61,14 +65,17 @@
                         <div>
                             <!-- A wrapper for all the blog posts -->
                             <div class="posts">
-                                <h1 class="content-subhead"><xsl:value-of select="//dc:title" /></h1>
+                                <h1 class="content-subhead"><xsl:value-of select="//dc:type" /></h1>
                                 <!-- A single blog post -->
                                 <section class="post">
                                     <header class="post-header">
-<!--                                        <img width="48" height="48" alt="Tilo Mitra&#x27;s avatar" class="post-avatar" src="/img/common/tilo-avatar.png"/>-->
-
                                         <h2 class="post-title"><xsl:value-of select="//dc:title" /></h2>
-                                        <h3>Authors</h3>
+                                        <xsl:if test="$publication_date">
+                                            <h3>Date</h3>
+                                            <p><xsl:value-of select="$publication_date"/></p>
+                                        </xsl:if>
+                                        <xsl:if test="//dc:creator">
+                                            <h3>Authors</h3>
                                         <div class="post-meta">
                                             <xsl:for-each select="//dc:creator">
                                                 <p>
@@ -78,31 +85,73 @@
                                                 </p>
                                             </xsl:for-each>
                                         </div>
-                                        <h3>Identifiers</h3>
-                                        <div class="post-meta">
-                                        <xsl:for-each select="//dc:identifier">
-                                            <xsl:if test="starts-with(., 'http')">
-                                                <p>
-                                                    <a>
-                                                        <xsl:attribute name="target">_blank</xsl:attribute>
-                                                        <xsl:attribute name="href">
-                                                            <xsl:value-of select="."/>
-                                                        </xsl:attribute>
-                                                        <xsl:value-of select="."/>
-                                                    </a>
-                                                </p>
-                                            </xsl:if>
-                                        </xsl:for-each>
-                                        </div>
-                                    </header>
-                                    <h3>Abstract</h3>
-                                    <div class="post-description">
-                                        <xsl:for-each select="//dc:description">
-                                            <div class="abstract">
-                                                <xsl:apply-templates />
+                                        </xsl:if>
+                                        <xsl:if test="//dc:identifier">
+                                            <h3>Identifiers</h3>
+                                            <div class="post-meta">
+                                                <xsl:for-each select="//dc:identifier">
+                                                    <xsl:choose>
+                                                        <xsl:when test="starts-with(., 'http')">
+                                                            <p>
+                                                                <a>
+                                                                    <xsl:attribute name="target">_blank</xsl:attribute>
+                                                                    <xsl:attribute name="href">
+                                                                        <xsl:value-of select="."/>
+                                                                    </xsl:attribute>
+                                                                    <xsl:value-of select="."/>
+                                                                </a>
+                                                            </p>
+                                                        </xsl:when>
+                                                        <xsl:otherwise>
+                                                            <p><xsl:value-of select="."/></p>
+                                                        </xsl:otherwise>
+                                                    </xsl:choose>
+                                                </xsl:for-each>
                                             </div>
-                                        </xsl:for-each>
-                                    </div>
+                                        </xsl:if>
+                                    </header>
+                                    <xsl:if test="//dc:description">
+                                        <h3>Abstract</h3>
+                                        <div class="post-description">
+                                            <xsl:for-each select="//dc:description">
+                                                <div class="abstract">
+                                                    <xsl:apply-templates />
+                                                </div>
+                                            </xsl:for-each>
+                                        </div>
+                                    </xsl:if>
+                                    <xsl:if test="//dc:subject">
+                                        <h3>Subjects</h3>
+                                        <div class="post-subjects">
+                                            <xsl:for-each select="//dc:subject">
+                                                <span class="subject-button pure-u-1-2 pure-u-sm-1-3">
+                                                    <button class="button-a pure-button">
+                                                        <xsl:value-of select="."/>
+                                                    </button>
+                                                </span>
+                                            </xsl:for-each>
+                                        </div>
+                                    </xsl:if>
+                                    <xsl:if test="//dc:publisher">
+                                        <h3>Publisher</h3>
+                                        <div class="post-publisher">
+                                            <xsl:for-each select="//dc:publisher">
+                                                <p class="publisher">
+                                                    <xsl:value-of select="." />
+                                                </p>
+                                            </xsl:for-each>
+                                        </div>
+                                    </xsl:if>
+                                    <xsl:if test="//dc:rights">
+                                        <h3>Rights</h3>
+                                        <div class="post-description">
+                                            <xsl:for-each select="//dc:rights">
+                                                <div class="rights">
+                                                    <xsl:apply-templates />
+                                                </div>
+                                            </xsl:for-each>
+                                        </div>
+                                    </xsl:if>
                                 </section>
                             </div>
 

@@ -47,7 +47,8 @@ class TransformXmlPipeline:
         result = transform(root,
                            website_title=transform.strparam(spider.website_title),
                            website_subtitle=transform.strparam(spider.website_subtitle),
-                           path_to_assets=transform.strparam(spider.path_to_assets)
+                           path_to_assets=transform.strparam(spider.path_to_assets),
+                           publication_date=transform.strparam(str(item['date']))
                            )
 
         # logging.info("text=%s", result.getroot().text)
@@ -64,6 +65,7 @@ class WriteToOCFLPipeline:
     Write item output to an OCFL repository using the standard ocflcore Python library.
     Make sure this pipeline is processed after all files have been transformed and saved
     to the item
+    OCFL module documentation: https://ocflcore.readthedocs.io/
     """
     # OCFL repository
     repository = None
@@ -90,7 +92,8 @@ class WriteToOCFLPipeline:
         """
         Process the item. Byte streams of the file contents and digests are
         created and added to a new object, unless it exists.
-        TODO: Versioning
+        TODO: Versioning (not yet impl in ocfl module)
+        TODO: Proper "get object by ID" check (not yet impl in ocfl module)
         :param item: the item being processed
         :param spider: spider (access to per-spider settings and objects)
         :return: item
@@ -98,8 +101,11 @@ class WriteToOCFLPipeline:
         # Only add if the ID does not already exist.
         # To add versioning, we should compare digests? Or inspect how
         # this is implemented elsewhere.
-        # and hasattr(item, 'html') and hasattr(item, 'xml')
-        if not self.repository.get(item['ocfl_id']):
+        # It turns out ocflcore module has not implemented repository.get() or
+        # repository.add_version()!! Perhaps look back to zimeon/ocfl-py instead
+        # So for now we'll just do a quick directory check instead of
+        # if not self.repository.get(item['ocfl_id']):
+        if not os.path.exists(f"{spider.path_to_ocfl}/root/{item['ocfl_id']}"):
             # Write file contents and digest to new OCFL object and add
             # to the repository
             ocfl_html_file = StreamDigest(BytesIO(item['html']))
