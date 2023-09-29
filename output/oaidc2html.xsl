@@ -15,24 +15,24 @@
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
                 <meta name="description" content="A layout example that shows off a blog page with a list of posts."/>
                 <title><xsl:value-of select="//dc:title" /></title>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous"/>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css"/>
-                <link rel="stylesheet" href="css/styles.css"/>
+                <link rel="stylesheet" href="/tmp/css/pure-min.css"/>
+                <link rel="stylesheet" href="/tmp/css/grids-responsive-min.css"/>
+                <link rel="stylesheet" href="/tmp/css/styles.css"/>
             </head>
             <body>
                 <div id="layout" class="pure-g">
                     <div class="sidebar pure-u-1 pure-u-md-1-4">
                         <div class="header">
-                            <h1 class="brand-title">A Sample Blog</h1>
-                            <h2 class="brand-tagline">Creating a blog layout using Pure</h2>
+                            <h1 class="brand-title">Open Access Resarch</h1>
+                            <h2 class="brand-tagline">Static HTML pages and XML records</h2>
 
-                            <nav class="nav">
-                                <ul class="nav-list">
-                                    <li class="nav-item">
-                                        <a class="pure-button" href="http://purecss.io">Pure</a>
-                                    </li>
-                                </ul>
-                            </nav>
+<!--                            <nav class="nav">-->
+<!--                                <ul class="nav-list">-->
+<!--                                    <li class="nav-item">-->
+<!--                                        <a class="pure-button" href="http://purecss.io">Pure</a>-->
+<!--                                    </li>-->
+<!--                                </ul>-->
+<!--                            </nav>-->
                         </div>
                     </div>
 
@@ -44,7 +44,7 @@
                                 <!-- A single blog post -->
                                 <section class="post">
                                     <header class="post-header">
-                                        <img width="48" height="48" alt="Tilo Mitra&#x27;s avatar" class="post-avatar" src="/img/common/tilo-avatar.png"/>
+<!--                                        <img width="48" height="48" alt="Tilo Mitra&#x27;s avatar" class="post-avatar" src="/img/common/tilo-avatar.png"/>-->
 
                                         <h2 class="post-title"><xsl:value-of select="//dc:title" /></h2>
                                         <h3>Authors</h3>
@@ -85,6 +85,12 @@
                                 </section>
                             </div>
 
+                            <div>
+                                <p>
+                                    <a target="_blank" href="record.xml">XML Record</a>
+                                </p>
+                            </div>
+
                             <div class="footer">
                                 <div class="pure-menu pure-menu-horizontal">
                                     <ul>
@@ -103,7 +109,6 @@
 
     <xsl:template match="text()">
        <xsl:param name="text" select="."/>
-
        <xsl:variable name="startText" select="substring-before(concat($text,'&#10;'),'&#10;')" />
        <xsl:variable name="nextText" select="substring-after($text,'&#10;')"/>
        <xsl:if test="normalize-space($startText)">
