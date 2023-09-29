@@ -23,6 +23,7 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
 
     extract_domain_regex = r'https?://([^/]+)'
     allowed_domains = []
+    url = None
     start_urls = []
     namespaces = [
         ('oaipmh', 'http://www.openarchives.org/OAI/2.0/'),
@@ -58,7 +59,7 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
     }
 
     def __init__(self, name: Optional[str] = None,
-                 start_url='https://dspace.mit.edu/oai/request?verb=ListRecords&metadataPrefix=oai_dc',
+                 url='http://localhost:4000/oai/request?verb=ListRecords&metadataPrefix=oai_dc',
                  tag='oaipmh:OAI-PMH',
                  website_title='OAI-PMH Feed',
                  website_subtitle='open access research',
@@ -76,9 +77,10 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         :param kwargs: kwargs pointer
         """
         # Set a single start URL
-        self.start_urls = [f'{start_url}']
+        self.url = url
+        self.start_urls = [f'{url}']
         # Set the allowed domains from the start URLs
-        self.allowed_domains = re.findall(self.extract_domain_regex, start_url)
+        self.allowed_domains = re.findall(self.extract_domain_regex, url)
         # Set the itertag (used by XMLSpider)
         self.itertag = tag
         # Set the website title and subtitle
@@ -92,16 +94,24 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         super().__init__(name, **kwargs)
 
     def parse_node(self, response, node):
+        """
+        Parse the main OAI-PMH node. We need to access the resumptionToken here which
+        is why we do not simply specify oaipmh:record as our itertag and parse that way.
+        The oaipmh:records are selected with xpath and then sent off to parse_record while a new request
+        to the resumptionToken is also yielded
+
+        :param response: http response
+        :param node: root OAIPMH node
+        :return:
+        """
         records = node.xpath(f"{self.record_xpath}")
         resumption = node.xpath(f"{self.resumption_xpath}")
-        self.logger.error(resumption)
         size = resumption.xpath("./@completeListSize").get()
-        self.logger.error(size)
+        self.logger.debug(f"completeListSize={size}")
         token = resumption.xpath("./text()").get()
-        self.logger.error(token)
-        url = self.start_urls[0].replace('&metadataPrefix=oai_dc', '')
+        self.logger.debug(f"resumptionToken={token}")
+        url = self.url.replace('&metadataPrefix=oai_dc', '')
         req = Request(f"{url}&resumptionToken={token}", callback=self._parse)
-        self.logger.error(req)
 
         for record in records:
             yield self.parse_record(response, record)
@@ -110,6 +120,10 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
     def parse_record(self, response, node):
         """
         Parse the XML node for a single OAI record
+        There is not too much to do here, as the XSL stylesheet will handle most fields and values
+        within the record. However, there are some things that are nice to handle in Python at this level
+        such as dates, links to other resources, and so on.
+
         :param response: the HTTP response
         :param node: the current XML node
         :return: constructed item to send to pipelines
@@ -136,7 +150,8 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
 
     def guess_date(self, dates, identifier):
         """
-        Parse a date from a list of dc:date values, and any other custom handling
+        Parse a date from a list of dc:date values, and guess which one might be the publication date
+
         :param dates: list of dates
         :param identitier: used for logging date errors which can be helpful in metadata validation
         :return: formatted date
@@ -183,8 +198,9 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         """
         We use this special method as our item validation test so we can use scrapy check
         as part of our test-driven development process
+        TODO: This test needs rewriting to support the new root node parsing, and a reference to a live site was removed
 
-        @url https://dspace.mit.edu/oai/request?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai:dspace.mit.edu:1721.1/126771
+        @url https://localhost/oai/request?verb=GetRecord&metadataPrefix=oai_dc&identifier=oai:localhost:1234
         @returns items 1 1
         @returns requests 0 0
         @scrapes id
