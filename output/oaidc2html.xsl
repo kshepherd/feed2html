@@ -7,24 +7,45 @@
     exclude-result-prefixes="oai_dc doc xsi dc"
     >
     <xsl:output method="html" indent="yes"/>
+    <xsl:param name="website_title"/>
+    <xsl:param name="website_subtitle"/>
+    <xsl:param name="path_to_assets"/>
     <xsl:preserve-space elements="dc:identifier"/>
     <xsl:template match="/">
         <html lang="en">
             <head>
                 <meta charset="utf-8"/>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-                <meta name="description" content="A layout example that shows off a blog page with a list of posts."/>
+                <meta name="description" content="HTML document generated from OAI feed by https://github.com/kshepherd/feed2html"/>
                 <title><xsl:value-of select="//dc:title" /></title>
-                <link rel="stylesheet" href="/tmp/css/pure-min.css"/>
-                <link rel="stylesheet" href="/tmp/css/grids-responsive-min.css"/>
-                <link rel="stylesheet" href="/tmp/css/styles.css"/>
+                <link>
+                    <xsl:attribute name="rel">stylesheet</xsl:attribute>
+                    <xsl:attribute name="href">
+                        <xsl:value-of select="$path_to_assets"/>
+                        <xsl:text>/css/pure-min.css</xsl:text>
+                    </xsl:attribute>
+                </link>
+                <link>
+                    <xsl:attribute name="rel">stylesheet</xsl:attribute>
+                    <xsl:attribute name="href">
+                        <xsl:value-of select="$path_to_assets"/>
+                        <xsl:text>/css/grids-responsive-min.css</xsl:text>
+                    </xsl:attribute>
+                </link>
+                <link>
+                    <xsl:attribute name="rel">stylesheet</xsl:attribute>
+                    <xsl:attribute name="href">
+                        <xsl:value-of select="$path_to_assets"/>
+                        <xsl:text>/css/styles.css</xsl:text>
+                    </xsl:attribute>
+                </link>
             </head>
             <body>
                 <div id="layout" class="pure-g">
                     <div class="sidebar pure-u-1 pure-u-md-1-4">
                         <div class="header">
-                            <h1 class="brand-title">Open Access Resarch</h1>
-                            <h2 class="brand-tagline">Static HTML pages and XML records</h2>
+                            <h1 class="brand-title"><xsl:value-of select="$website_title"/></h1>
+                            <h2 class="brand-tagline"><xsl:value-of select="$website_subtitle"/></h2>
 
 <!--                            <nav class="nav">-->
 <!--                                <ul class="nav-list">-->
@@ -107,6 +128,7 @@
 
     </xsl:template>
 
+    <!-- Templates to handle line break handling -->
     <xsl:template match="text()">
        <xsl:param name="text" select="."/>
        <xsl:variable name="startText" select="substring-before(concat($text,'&#10;'),'&#10;')" />

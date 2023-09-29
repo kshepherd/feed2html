@@ -7,12 +7,21 @@ import scrapy
 
 
 class Feed2HtmlItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
+    """
+    Simple item model for parsed XML records
+    """
+    # Identifier
     id = scrapy.Field()
+    # Datestamp (usually the crawl datestamp)
     datestamp = scrapy.Field()
+    # Original crawled record
     record = scrapy.Field()
+    # OA URLs (e.g. Unpaywall search results)
     oa_url = scrapy.Field()
+    # Sanitized OCFL identifier
     ocfl_id = scrapy.Field()
+    # Transformed HTML
     html = scrapy.Field()
+    # Transformed XML
+    xml = scrapy.Field()
     pass

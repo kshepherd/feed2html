@@ -1,62 +1,101 @@
 from typing import Optional, Any
 
 import scrapy
-from scrapy.http import Request
 from scrapy.selector import Selector
 from feed2html.items import Feed2HtmlItem
 import re
-from io import BytesIO
-from ocflcore import (
-    FileSystemStorage,
-    OCFLRepository,
-    OCFLObject,
-    OCFLVersion,
-    StorageRoot,
-    StreamDigest,
-    TopLevelLayout,
-)
+
 
 class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
+    """
+    Crawl an OAI-PMH XML feed and send the parsed items through configured pipelines
+    """
     name = "oaipmh_dc_xml"
-    allowed_domains = ["dspace.mit.edu"]
-    start_urls = ["https://dspace.mit.edu/oai/request?verb=ListRecords&metadataPrefix=oai_dc"]
+
+    # Sensible default based on typical DSpace OAI PMH feeds
+    identifier_xpath = 'oaipmh:header/oaipmh:identifier/text()'
+    datestamp_xpath = 'oaipmh:header/oaipmh:datestamp/text()'
+    extract_domain_regex = r'https?://([^/]+)'
+    allowed_domains = []
+    start_urls = []
     namespaces = [
         ('oaipmh', 'http://www.openarchives.org/OAI/2.0/'),
         ('dc', 'http://purl.org/dc/elements/1.1/'),
         ('doc', 'http://www.lyncode.com/xoai')
     ]
-    iterator = 'xml'
-    #iterator = 'xml'
     itertag = "oaipmh:record"
+    iterator = 'xml'
+
+    # Custom properties for pipelines to access when transforming or rendering documents
+    # such as website name, path to assets, path to OCFL repository, etc.
+    website_title = 'OAI-PMH Feed'
+    website_subtitle = 'open access research'
+    path_to_assets = '/tmp'
+    # OCFL repository path. 'root' and 'workspace' will be initialized here.
+    # Directory will be created if it does not exist.
+    path_to_ocfl = '/tmp/ocfl'
+    # XSL used in HTML transformation
+    path_to_xsl = 'output/oaidc2html.xsl'
+
+
+    # Set up custom settings and pipelines
     custom_settings = {
-        #'DUPEFILTER_CLASS': 'scrapy.dupefilters.BaseDupeFilter',
         'CLOSESPIDER_PAGECOUNT': 1,
         'ITEM_PIPELINES': {
-                'feed2html.pipelines.TransformXmlPipeline': 900,
+            'feed2html.pipelines.TransformXmlPipeline': 200,
+            'feed2html.pipelines.WriteToOCFLPipeline': 900,
         },
     }
-    # OCFL properties
-    ocfl_root = StorageRoot(TopLevelLayout())
-    storage = FileSystemStorage("root")
-    workspace_storage = FileSystemStorage("workspace")
-    repository = OCFLRepository(ocfl_root, storage,
-                                workspace_storage=workspace_storage)
 
-    def __init__(self, name: Optional[str] = None, **kwargs: Any):
+    def __init__(self, name: Optional[str] = None,
+                 start_url='https://dspace.mit.edu/oai/request?verb=ListRecords&metadataPrefix=oai_dc',
+                 tag='oaipmh:record',
+                 website_title='OAI-PMH Feed',
+                 website_subtitle='open access research',
+                 path_to_assets='/tmp',
+                 path_to_ocfl='/tmp/ocfl',
+                 path_to_xsl='output/oaidc2html.xsl',
+                 **kwargs: Any):
+        """
+        Initialize this spider, setting some custom parameters from the command line to make it more reusable
+        CLI arguments are set with `-a <arg>=<value>` when running scrapy crawl on this spider
+
+        :param name: spider name
+        :param start_url: Start URL (OAI ListRecords verb)
+        :param tag: The tag name to use for itertag
+        :param kwargs: kwargs pointer
+        """
+        # Set a single start URL
+        self.start_urls = [f'{start_url}']
+        # Set the allowed domains from the start URLs
+        self.allowed_domains = re.findall(self.extract_domain_regex, start_url)
+        # Set the itertag (used by XMLSpider)
+        self.itertag = tag
+        # Set the website title and subtitle
+        self.website_title = website_title
+        self.website_subtitle = website_subtitle
+        # Set up paths to assets (css and so on), XSL and OCFL repo
+        self.path_to_assets = path_to_assets
+        self.path_to_ocfl = path_to_ocfl
+        self.path_to_xsl = path_to_xsl
+        # Continue with superclass initialization
         super().__init__(name, **kwargs)
 
     def parse_node(self, response, node):
-        # self.logger.info(
-        #     "Hi, this is a <%s> node!: %s", self.itertag, "".join(node.getall())
-        # )
-
-       # self.logger.info("thing=%s", node.xpath('oaipmh:header/oaipmh:identifier/text()').get())
+        """
+        Parse the XML node for a single OAI record
+        :param response: the HTTP response
+        :param node: the current XML node
+        :return: constructed item to send to pipelines
+        """
+       # self.logger.info("thing=%s", node.xpath(self.identifier_xpath).get())
 
         item = Feed2HtmlItem()
-        #self.logger.info(node.xpath('.'))
-        item['id'] = node.xpath('oaipmh:header/oaipmh:identifier/text()').extract()
-        item['datestamp'] = node.xpath('oaipmh:header/oaipmh:datestamp/text()').get()
-        item['record'] = node.xpath('.').get()
+        item['id'] = node.xpath(self.identifier_xpath).extract()
+        item['datestamp'] = node.xpath(self.datestamp_xpath).get()
+        item['xml'] = node.xpath('.').get()
+        # Sanitise OAI identifier so that it is a valid FS directory name
+        # You might need to change this based on your own requirements and FS used
         item['ocfl_id'] = re.sub(r'[/:, ]', '_', str(item['id'][0]))
         return item
 
