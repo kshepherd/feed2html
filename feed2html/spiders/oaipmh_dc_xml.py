@@ -1,8 +1,20 @@
+from typing import Optional, Any
+
 import scrapy
 from scrapy.http import Request
 from scrapy.selector import Selector
 from feed2html.items import Feed2HtmlItem
-
+import re
+from io import BytesIO
+from ocflcore import (
+    FileSystemStorage,
+    OCFLRepository,
+    OCFLObject,
+    OCFLVersion,
+    StorageRoot,
+    StreamDigest,
+    TopLevelLayout,
+)
 
 class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
     name = "oaipmh_dc_xml"
@@ -23,7 +35,15 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
                 'feed2html.pipelines.TransformXmlPipeline': 900,
         },
     }
+    # OCFL properties
+    ocfl_root = StorageRoot(TopLevelLayout())
+    storage = FileSystemStorage("root")
+    workspace_storage = FileSystemStorage("workspace")
+    repository = OCFLRepository(ocfl_root, storage,
+                                workspace_storage=workspace_storage)
 
+    def __init__(self, name: Optional[str] = None, **kwargs: Any):
+        super().__init__(name, **kwargs)
 
     def parse_node(self, response, node):
         # self.logger.info(
@@ -37,6 +57,7 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         item['id'] = node.xpath('oaipmh:header/oaipmh:identifier/text()').extract()
         item['datestamp'] = node.xpath('oaipmh:header/oaipmh:datestamp/text()').get()
         item['record'] = node.xpath('.').get()
+        item['ocfl_id'] = re.sub(r'[/:, ]', '_', str(item['id'][0]))
         return item
 
     def test(self, response):

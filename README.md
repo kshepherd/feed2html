@@ -5,7 +5,7 @@ Generate static HTML sites from various feed formats like OAI-PMH, RSS
 
 This project was inspired by Professor Hussein Suleman (University of Cape Town), who gave a rousing closing keynote at Open Repositories 2023 about what really makes an open access repository *accessible*.
 
-An OCFL implementation in Python is a secondary goal
+OCFL support is a secondary goal
 
 ## Tools and methodologies
 
@@ -51,6 +51,15 @@ ss conditions, metadata, etc.
 
 However, starting with oai_dc DSpace for now to get some HTML to look at and play with
 
+RDF/metadata in HTML: https://www.w3.org/2001/sw/RDFCore/20031212-rdfinhtml/ (currently leaning toward link rel (schema) and meta elements in html head, like DSpace does, for a simple and tried+true approach which search engines also tend to understand)
+
+Python OCFL:
+https://github.com/zimeon/ocfl-py  https://pypi.org/project/ocfl-py/ 
+https://github.com/inveniosoftware/ocflcore
+https://github.com/OCFL/spec/wiki/Implementations
+https://ocflcore.readthedocs.io/en/latest/
+
+Go OCFL: https://github.com/birkland/ocfl 
 ### Search
 
 Perhaps a better alternative to a search engine pipeline is a separate tool which iterates an OCFL root and indexes to solr. This means we can take advantage of the manifest and do full text extraction, with the extracted text being inserted into the same solr doc as the record, etc.

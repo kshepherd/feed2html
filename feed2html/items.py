@@ -13,4 +13,6 @@ class Feed2HtmlItem(scrapy.Item):
     datestamp = scrapy.Field()
     record = scrapy.Field()
     oa_url = scrapy.Field()
+    ocfl_id = scrapy.Field()
+    html = scrapy.Field()
     pass
