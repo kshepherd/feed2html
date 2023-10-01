@@ -18,7 +18,7 @@ https://minicomp.github.io/wiki/wax/ is another static website project for colle
 
 ### Dataset as website
 
-pt has done some work with this in the ROCrate tools. I think this is a cool example compared to eg. a dataset *collection* because the static customisable website makes sense where the researcher or curator is able to produce something that works for that dataset and doesn't need to be tied to any other RDM systems
+pt has done some work with this in the ROCrate tools using popular unix tools to produce websites. I think this is a cool example compared to eg. a datasets collection or catalogue because the static customisable website makes sense where the researcher or curator is able to produce something that works for a specific dataset and doesn't need to be tied to any other RDM systems
 
 ### Simple publication repositories
 

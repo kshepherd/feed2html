@@ -71,7 +71,6 @@ The [Oxford Common File Layout (OCFL)](https://ocfl.io/) specification describes
    1. [ ] Send to search index (solr, ES, zincsearch?)
 1. Documentation
    1. [ ] Complete pydoc coverage
-   2. [ ]
    1. [x] Installation and usage instructions
    1. [ ] Complete this README with thorough explanation of the spider and pipelines, and advanced usage instructions
 1. Release
