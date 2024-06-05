@@ -54,7 +54,7 @@ class MetsModsXml(scrapy.spiders.XMLFeedSpider):
     # XSL used in HTML transformation
     path_to_xsl = 'output/oaimets2html.xsl'
 
-    file_crawl_path = '/home/kim/projects/feed2html/feed2html/crawls/'
+    file_crawl_path = '/tmp/crawls/'
 
 
     # Set up custom settings and pipelines
@@ -74,7 +74,7 @@ class MetsModsXml(scrapy.spiders.XMLFeedSpider):
     }
 
     def __init__(self, name: Optional[str] = None,
-                 url='https://ir.wgtn.ac.nz/oai/request?verb=ListRecords&metadataPrefix=mets&set=com_123456789_1',
+                 url='https://your.repository.here/oai/request?verb=ListRecords&metadataPrefix=mets&set=com_123456789_1',
                  tag='oaipmh:OAI-PMH',
                  website_title='OAI-PMH Feed',
                  website_subtitle='open access research',
@@ -133,7 +133,7 @@ class MetsModsXml(scrapy.spiders.XMLFeedSpider):
         req = Request(f"{url}&resumptionToken={token}", callback=self._parse)
         i = 0
         for record in records:
-            if i < 1:
+            if i < 10:
                 yield self.parse_record(response, record)
             i = i + 1
 

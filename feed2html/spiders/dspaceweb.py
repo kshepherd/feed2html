@@ -16,7 +16,7 @@ class DSpaceWeb(scrapy.spiders.CrawlSpider):
         """
         # Empty search, first page of each category.
         urls = [
-            'https://repository.uwc.ac.za/browse?type=title&offset=0&etal=-1&order=ASC',
+            'https://your.dspace.here/browse?type=title&offset=0&etal=-1&order=ASC',
         ]
         for url in urls:
             yield scrapy.Request(url=url, callback=self.parse)

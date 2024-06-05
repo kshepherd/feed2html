@@ -8,6 +8,8 @@ import mimetypes
 import shutil
 from contextlib import suppress
 from pathlib import Path
+
+from scrapy import settings
 from scrapy.utils.python import to_bytes
 
 import scrapy.pipelines.files
@@ -59,7 +61,8 @@ class ExportMarkdownPipeline(object):
 
     def process_item(self, item, spider):
         if item is not None:
-            file_path = f"/home/kim/projects/feed2html/feed2html/crawls/{get_file_paths(item)}"
+            base_path = spider.file_crawl_path
+            file_path = f"{base_path}/{get_file_paths(item)}"
             # Opening file in binary-write mode
             os.makedirs(file_path, exist_ok=True)
             file = open(f"{file_path}/metadata.md", 'wb')
