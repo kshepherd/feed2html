@@ -1,0 +1,248 @@
+<OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>2024-06-03T11:55:54Z</responseDate><request verb="ListRecords" metadataPrefix="xoai">https://dspace.mit.edu//oai/request</request>
+    <ListRecords>
+        <record>
+            <header><identifier>oai:dspace.mit.edu:1721.1/126771</identifier><datestamp>2022-09-26T07:12:38Z</datestamp>
+                <setSpec>com_1721.1_49432</setSpec><setSpec>hdl_1721.1_49432</setSpec><setSpec>col_1721.1_49433</setSpec>
+                <setSpec>hdl_1721.1_49433</setSpec>
+            </header>
+    <metadata>
+        <metadata xmlns="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.lyncode.com/xoai http://www.lyncode.com/xsd/xoai.xsd">
+   <element name="dc">
+      <element name="contributor">
+         <element name="author">
+            <element name="none">
+               <field name="value">Deringer, William P</field>
+               <field name="authority">1003c81f2592028c8048af367b0639ed</field>
+               <field name="confidence">600</field>
+            </element>
+         </element>
+         <element name="department">
+            <element name="en_US">
+               <field name="value">Massachusetts Institute of Technology. Program in Science, Technology and Society</field>
+               <field name="authority">23a6e6be11f5687b67cf96543c99dd8f</field>
+               <field name="confidence">600</field>
+            </element>
+         </element>
+         <element name="approver">
+            <element name="en_US">
+               <field name="value">Deringer, William P</field>
+            </element>
+         </element>
+      </element>
+      <element name="date">
+         <element name="accessioned">
+            <element name="none">
+               <field name="value">2020-08-24T19:47:30Z</field>
+            </element>
+         </element>
+         <element name="available">
+            <element name="none">
+               <field name="value">2020-08-24T19:47:30Z</field>
+            </element>
+         </element>
+         <element name="issued">
+            <element name="none">
+               <field name="value">2020-03</field>
+            </element>
+         </element>
+      </element>
+      <element name="identifier">
+         <element name="issn">
+            <element name="none">
+               <field name="value">1058-6180</field>
+               <field name="value">1934-1547</field>
+            </element>
+         </element>
+         <element name="uri">
+            <element name="none">
+               <field name="value">https://hdl.handle.net/1721.1/126771</field>
+            </element>
+         </element>
+         <element name="citation">
+            <element name="en_US">
+               <field name="value">Deringer, William. "Michael Milken's Spreadsheets: Computation and Charisma in Finance in the Go-Go ’80s." IEEE Annals of the History of Computing 42, 3 (July-September 2020): 53 - 69 © 2020 IEEE</field>
+            </element>
+         </element>
+      </element>
+      <element name="description">
+         <element name="abstract">
+            <element name="en_US">
+               <field name="value">Wall Street lore holds that “junk bond” king Michael Milken once blamed the tumultuous changes that roiled American finance in the 1980s on VisiCalc, the pioneering spreadsheet software. This article takes Milken's quip as a prompt to explore the practical and cultural place of computing in 1980s finance. It reveals that PCs, especially spreadsheets, augmented the capacities of 1980s financiers in three ways—surveillance, valuation, and imagination—each crucial to Milken's “machine.” Yet this article also exposes another side to Milken's success, grounded not in computation but charisma. Milken's power lay both in innovative command over novel technicalities and a simultaneous sense that he possessed a suprarational vision transcending the technical. Milken's spreadsheets help us to reconsider a central debate in the social studies of finance about the “ghost in the financial machine” and to examine the co-construction of “killer apps” and “killer applicants” in the early history of personal computing.</field>
+            </element>
+         </element>
+      </element>
+      <element name="publisher">
+         <element name="en_US">
+            <field name="value">Institute of Electrical and Electronics Engineers (IEEE)</field>
+         </element>
+      </element>
+      <element name="relation">
+         <element name="isversionof">
+            <element name="en_US">
+               <field name="value">http://dx.doi.org/10.1109/mahc.2020.2982650</field>
+            </element>
+         </element>
+         <element name="journal">
+            <element name="en_US">
+               <field name="value">IEEE Annals of the History of Computing</field>
+            </element>
+         </element>
+      </element>
+      <element name="rights">
+         <element name="en_US">
+            <field name="value">Creative Commons Attribution-Noncommercial-Share Alike</field>
+         </element>
+         <element name="uri">
+            <element name="en_US">
+               <field name="value">http://creativecommons.org/licenses/by-nc-sa/4.0/</field>
+            </element>
+         </element>
+      </element>
+      <element name="source">
+         <element name="en_US">
+            <field name="value">Prof. William Deringer</field>
+         </element>
+      </element>
+      <element name="title">
+         <element name="en_US">
+            <field name="value">Michael Milken's Spreadsheets: Computation and Charisma in Finance in the Go-Go ’80s</field>
+         </element>
+      </element>
+      <element name="type">
+         <element name="en_US">
+            <field name="value">Article</field>
+         </element>
+         <element name="uri">
+            <element name="en_US">
+               <field name="value">http://purl.org/eprint/type/JournalArticle</field>
+            </element>
+         </element>
+      </element>
+      <element name="eprint">
+         <element name="version">
+            <element name="en_US">
+               <field name="value">Author's final manuscript</field>
+            </element>
+         </element>
+      </element>
+   </element>
+   <element name="eprint">
+      <element name="status">
+         <element name="en_US">
+            <field name="value">http://purl.org/eprint/status/PeerReviewed</field>
+         </element>
+      </element>
+   </element>
+   <element name="dspace">
+      <element name="date">
+         <element name="submission">
+            <element name="none">
+               <field name="value">2020-08-22T18:10:30Z</field>
+            </element>
+         </element>
+      </element>
+   </element>
+   <element name="mit">
+      <element name="journal">
+         <element name="volume">
+            <element name="en_US">
+               <field name="value">42</field>
+            </element>
+         </element>
+         <element name="issue">
+            <element name="en_US">
+               <field name="value">3</field>
+            </element>
+         </element>
+      </element>
+      <element name="license">
+         <element name="none">
+            <field name="value">OPEN_ACCESS_POLICY</field>
+         </element>
+      </element>
+      <element name="metadata">
+         <element name="status">
+            <element name="none">
+               <field name="value">Complete</field>
+            </element>
+         </element>
+      </element>
+   </element>
+   <element name="bundles">
+      <element name="bundle">
+         <field name="name">COVERPAGE</field>
+         <element name="bitstreams">
+            <element name="bitstream">
+               <field name="name">Michael Milken's Spreadsheets: Computation and Charisma in Finance in the Go-Go ’80s</field>
+               <field name="originalName">Michael Milken's Spreadsheets: Computation and Charisma in Finance in the Go-Go ’80s</field>
+               <field name="format">application/pdf</field>
+               <field name="size">512297</field>
+               <field name="url">https://dspace.mit.edu/bitstream/1721.1/126771/4/Michael%20Milken%27s%20Spreadsheets%3a%20Computation%20and%20Charisma%20in%20Finance%20in%20the%20Go-Go%20%e2%80%9980s</field>
+               <field name="checksum">729dd5e436e8d2f6c33b3a19aec7c717</field>
+               <field name="checksumAlgorithm">MD5</field>
+               <field name="sid">4</field>
+            </element>
+         </element>
+      </element>
+      <element name="bundle">
+         <field name="name">THUMBNAIL</field>
+         <element name="bitstreams">
+            <element name="bitstream">
+               <field name="name">DERINGER Milkens Spreadsheets IEEE Annals vInitialSubmission 11152019.pdf.jpg</field>
+               <field name="originalName">DERINGER Milkens Spreadsheets IEEE Annals vInitialSubmission 11152019.pdf.jpg</field>
+               <field name="description">Generated Thumbnail</field>
+               <field name="format">image/jpeg</field>
+               <field name="size">4923</field>
+               <field name="url">https://dspace.mit.edu/bitstream/1721.1/126771/3/DERINGER%20Milkens%20Spreadsheets%20IEEE%20Annals%20vInitialSubmission%2011152019.pdf.jpg</field>
+               <field name="checksum">1fc608fc7573be0281266dd4da904f60</field>
+               <field name="checksumAlgorithm">MD5</field>
+               <field name="sid">3</field>
+            </element>
+         </element>
+      </element>
+      <element name="bundle">
+         <field name="name">TEXT</field>
+         <element name="bitstreams">
+            <element name="bitstream">
+               <field name="name">DERINGER Milkens Spreadsheets IEEE Annals vInitialSubmission 11152019.pdf.txt</field>
+               <field name="originalName">DERINGER Milkens Spreadsheets IEEE Annals vInitialSubmission 11152019.pdf.txt</field>
+               <field name="description">Extracted text</field>
+               <field name="format">text/plain</field>
+               <field name="size">71460</field>
+               <field name="url">https://dspace.mit.edu/bitstream/1721.1/126771/2/DERINGER%20Milkens%20Spreadsheets%20IEEE%20Annals%20vInitialSubmission%2011152019.pdf.txt</field>
+               <field name="checksum">8fba79e50578366f2c5cd84675298424</field>
+               <field name="checksumAlgorithm">MD5</field>
+               <field name="sid">2</field>
+            </element>
+         </element>
+      </element>
+      <element name="bundle">
+         <field name="name">ORIGINAL</field>
+         <element name="bitstreams">
+            <element name="bitstream">
+               <field name="name">DERINGER Milkens Spreadsheets IEEE Annals vInitialSubmission 11152019.pdf</field>
+               <field name="originalName">DERINGER Milkens Spreadsheets IEEE Annals vInitialSubmission 11152019.pdf</field>
+               <field name="format">application/pdf</field>
+               <field name="size">462721</field>
+               <field name="url">https://dspace.mit.edu/bitstream/1721.1/126771/1/DERINGER%20Milkens%20Spreadsheets%20IEEE%20Annals%20vInitialSubmission%2011152019.pdf</field>
+               <field name="checksum">5266c478ae5544db5bceec7d900c56ed</field>
+               <field name="checksumAlgorithm">MD5</field>
+               <field name="sid">1</field>
+            </element>
+         </element>
+      </element>
+   </element>
+   <element name="others">
+      <field name="handle">1721.1/126771</field>
+      <field name="identifier">oai:dspace.mit.edu:1721.1/126771</field>
+      <field name="lastModifyDate">2022-09-26 07:12:38.652</field>
+   </element>
+   <element name="repository">
+      <field name="name">mit-6</field>
+      <field name="mail">dspace@mit.edu</field>
+   </element>
+</metadata></metadata>
+        </record>
+    </ListRecords>
+</OAI-PMH>

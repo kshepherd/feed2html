@@ -1,3 +1,5 @@
+import hashlib
+
 import pytz
 from dateutil.parser import parse, ParserError
 from typing import Optional, Any
@@ -5,21 +7,22 @@ from typing import Optional, Any
 import scrapy
 from scrapy import Request
 from scrapy.selector import Selector
+from scrapy.utils.python import to_bytes
 
 from feed2html.items import Feed2HtmlItem
 import re
 
 
-class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
+class MetsModsXml(scrapy.spiders.XMLFeedSpider):
     """
     Crawl an OAI-PMH XML feed and send the parsed items through configured pipelines
+    Assumeing METS wrapper with MODS metadata
     """
-    name = "oaipmh_dc_xml"
+    name = "mets"
 
     # Sensible default based on typical DSpace OAI PMH feeds
     identifier_xpath = 'oaipmh:header/oaipmh:identifier/text()'
     datestamp_xpath = 'oaipmh:header/oaipmh:datestamp/text()'
-    publication_date_xpath = './/dc:date/text()'
 
     extract_domain_regex = r'https?://([^/]+)'
     allowed_domains = []
@@ -28,10 +31,15 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
     namespaces = [
         ('oaipmh', 'http://www.openarchives.org/OAI/2.0/'),
         ('dc', 'http://purl.org/dc/elements/1.1/'),
-        ('doc', 'http://www.lyncode.com/xoai')
+        ('doc', 'http://www.lyncode.com/xoai'),
+        ('mods', 'http://www.loc.gov/mods/v3'),
+        ('mets', 'http://www.loc.gov/METS/'),
+        ('premis', 'http://www.loc.gov/standards/premis')
     ]
     resumption_xpath = "//oaipmh:resumptionToken"
     record_xpath = "//oaipmh:record"
+    premis_xpath = ".//premis:object"
+    mods_xpath = ".//mods:mods"
     itertag = "oaipmh:OAI-PMH"
     iterator = 'xml'
 
@@ -44,28 +52,36 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
     # Directory will be created if it does not exist.
     path_to_ocfl = '/tmp/ocfl'
     # XSL used in HTML transformation
-    path_to_xsl = 'output/oaidc2html.xsl'
+    path_to_xsl = 'output/oaimets2html.xsl'
+
+    file_crawl_path = '/home/kim/projects/feed2html/feed2html/crawls/'
 
 
     # Set up custom settings and pipelines
     custom_settings = {
         'ROBOTSTXT_OBEY': False,
+        'MEDIA_ALLOW_REDIRECTS': True,
+        'FILES_STORE': file_crawl_path,
         #'CLOSESPIDER_PAGECOUNT': 1,
         #'CLOSESPIDER_ITEMCOUNT': 1,
         'ITEM_PIPELINES': {
-            'feed2html.pipelines.TransformXmlPipeline': 200,
-            'feed2html.pipelines.WriteToOCFLPipeline': 900,
+            #'feed2html.pipelines.TransformXmlPipeline': 200,
+            #'feed2html.pipelines.WriteToOCFLPipeline': 900,
+            #'scrapy.pipelines.files.FilesPipeline': 1000
+            'feed2html.pipelines.FilesRelativePipeline': 300,
+            'feed2html.pipelines.ExportMarkdownPipeline': 400
         },
     }
 
     def __init__(self, name: Optional[str] = None,
-                 url='http://localhost:4000/oai/request?verb=ListRecords&metadataPrefix=oai_dc',
+                 url='https://ir.wgtn.ac.nz/oai/request?verb=ListRecords&metadataPrefix=mets&set=com_123456789_1',
                  tag='oaipmh:OAI-PMH',
                  website_title='OAI-PMH Feed',
                  website_subtitle='open access research',
                  path_to_assets='/tmp',
                  path_to_ocfl='/tmp/ocfl',
-                 path_to_xsl='output/oaidc2html.xsl',
+                 path_to_xsl='output/oaimets2html.xsl',
+                 file_crawl_path=file_crawl_path,
                  **kwargs: Any):
         """
         Initialize this spider, setting some custom parameters from the command line to make it more reusable
@@ -91,6 +107,9 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         self.path_to_ocfl = path_to_ocfl
         self.path_to_xsl = path_to_xsl
         # Continue with superclass initialization
+
+        self.file_crawl_path = file_crawl_path
+
         super().__init__(name, **kwargs)
 
     def parse_node(self, response, node):
@@ -112,9 +131,12 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         self.logger.debug(f"resumptionToken={token}")
         url = self.url.replace('&metadataPrefix=oai_dc', '')
         req = Request(f"{url}&resumptionToken={token}", callback=self._parse)
-
+        i = 0
         for record in records:
-            yield self.parse_record(response, record)
+            if i < 1:
+                yield self.parse_record(response, record)
+            i = i + 1
+
         yield req
 
     def parse_record(self, response, node):
@@ -129,70 +151,73 @@ class OaipmhDcSpider(scrapy.spiders.XMLFeedSpider):
         :return: constructed item to send to pipelines
         """
         item = Feed2HtmlItem()
-        item['id'] = node.xpath(self.identifier_xpath).extract()
+        item['files_added'] = []
+        item['id'] = node.xpath(self.identifier_xpath).get()
         item['datestamp'] = node.xpath(self.datestamp_xpath).get()
-        # Although we let XSLT handle all the other metadata fields directly, we know from experience
-        # that dc:date in simple DC from DSpace can be an issue if the repository doesn't do its own
-        # handling to reduce them down to a single publication date. Also, we might want some more powerful
-        # parsing and formatting of date strings, and this is a lot easier to do in Python.
-        # So, we have a static function that will try to guess and format the best date.
-        # It will be passed to the XSLT as a parameter
-        item['date'] = self.guess_date(node.xpath(self.publication_date_xpath).extract(), item['id'])
-        item['xml'] = node.xpath('.').get()
+
         # Sanitise OAI identifier so that it is a valid FS directory name
         # You might need to change this based on your own requirements and FS used
-        item['ocfl_id'] = re.sub(r'[/:, ]', '_', str(item['id'][0]))
+        item['ocfl_id'] = re.sub(r'[/:, ]', '_', str(item['id']))
+
+        # METS Agent (org) name
+        item['agent_name'] = node.xpath('.//mets:agent/mets:name/text()').get()
+
+        # MODS basic metadata
+        item['title'] = node.xpath('.//mods:title/text()').get()
+        item['date_issued'] = node.xpath('.//mods:dateIssued/text()').get()
+        item['abstract'] = node.xpath('.//mods:abstract/text()').get()
+        item['identifier'] = node.xpath('.//mods:identifier/text()').extract()
+        item['language'] = node.xpath('.//mods:language/mods:languageTerm/text()').get()
+        item['publication_type'] = node.xpath('.//mods:genre/text()').get()
+
+        item['access_condition'] = node.xpath('.//mods:accessCondition/text()').get()
+
+        premis_objects = []
+        files = []
+        for premis_object in node.xpath(self.premis_xpath):
+            premis_uri = premis_object.xpath('.//premis:objectIdentifierValue/text()').get()
+            premis_size = premis_object.xpath('.//premis:size/text()').get()
+            premis_md5 = premis_object.xpath('.//premis:fixity/premis:messageDigest/text()').get()
+            premis_format = premis_object.xpath('.//premis:format/premis:formatDesignation/premis:formatName/text()').get()
+            object = {
+                'uri': premis_uri,
+                'size': premis_size,
+                'md5': premis_md5,
+                'format': premis_format
+            }
+            premis_objects.append(object)
+
+        # PREMIS might not be implemented everywhere, so also get fileSec/fileGrp
+        if len(premis_objects) == 0:
+            for fileGrp in node.xpath(".//fileSec/fileGrp[@USE='ORIGINAL' or @USE='reference']"):
+                # Filter out any unwanted groups here? DSpace uses 'ORIGINAL', Eprints 'reference' for main files
+                # and dspace uses 'TEXT' for full text
+                for file in fileGrp.xpath(".//file"):
+                    files.append({
+                        'uri': file.xpath("FLocat[LOCTYPE='URL']").attrib('xlink:href').get(),
+                        'size': file.attrib('SIZE').get(),
+                        'md5': file.attrib('CHECKSUM').get(),
+                        'format': file.attrib('MIMETYPE').get()
+                    })
+            item['files_to_download'] = files
+        else:
+            item['files_to_download'] = premis_objects
+
+        item['file_urls'] = []
+        for file in item['files_to_download']:
+            item['file_urls'].append(file['uri'])
+
+        # Finally store the entire XML object if we want - e.g. to pass to XSLT
+        item['xml'] = node.xpath('.').get()
+
+        # Finally finally, hash something about the item to use as a local ID / file path prefix
+        item_hash = hashlib.sha1(to_bytes(item['id'])).hexdigest()
+        item['hash'] = item_hash
 
         # Other spiders use yield here, but it screwed up our data handling (the 1996 date ending up in many items etc)
         # so we are using the more straight-forward return here, to process things in strict order and return
         # the item instead of a generator.
         return item
-
-    def guess_date(self, dates, identifier):
-        """
-        Parse a date from a list of dc:date values, and guess which one might be the publication date
-
-        :param dates: list of dates
-        :param identitier: used for logging date errors which can be helpful in metadata validation
-        :return: formatted date
-        """
-        parsed_dates = list()
-        if isinstance(dates, list):
-            for date in dates:
-                if len(date) == 4:
-                    # A date which is just a year, is probably what we are looking for.
-                    return date
-                # Parse the date string to a datetime object
-                try:
-                    parsed_date = parse(date).replace(tzinfo=pytz.UTC)
-                    if parsed_date is not None:
-                        parsed_dates.append(parsed_date)
-                except ParserError as error:
-                    self.logger.error(f"Could not parse date: {error}")
-                    if date is not None and len(date) > 4:
-                        try:
-                            # Hm, ok, we will just extract the first 4 consecutive numbers we see
-                            # and call it a date
-                            year_guess = re.search(r'[0-9]{4}', date)
-                            if year_guess is not None and year_guess.group():
-                                parsed_date = parse(year_guess.group()).replace(tzinfo=pytz.UTC)
-                                if parsed_date is not None:
-                                    parsed_dates.append(parsed_date)
-                        except ParserError as second_error:
-                            # OK, give up and skip this date
-                            self.logger.error(f"Could not parse partial date: {identifier}")
-
-        best_guess = None
-
-        if len(parsed_dates) > 0:
-            # Get the earliest date
-            best_guess = min(parsed_dates)
-
-        if best_guess is not None:
-            # Return just the year in this simple example
-            return best_guess.strftime("%Y")
-
-        return "Unknown date"
 
     def test(self, response):
         """
