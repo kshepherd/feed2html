@@ -7,6 +7,13 @@ This project was inspired by Professor Hussein Suleman (University of Cape Town)
 
 Rather than re-invent a whole repository platform, this tool is one step in that direction: using existing protocols that have served us well for years (OAI-PMH and RSS), we can harvest existing repositories on the web, no matter how complex they happen to be, and produce our own simple, file-based repositories using standards and simple document formats like HTML.
 
+## OR2024 Static Site Workshop notes
+
+If you came here from the OR2024 closing presentation, you might want to check out the 'mets' spider instead of the oai_dc one, as it will harvest an OAI-PMH METS with MODS feed, download linked files, and write markdown documents with frontmatter instead of using XSLT to try and produce all the HTML itself. (this lets us feed static site generators which generally will do a better job of this).
+
+See the slides and pitches from this presentation at [TODO: Put link here once slides read-only]
+
+The rest of the instructions here should still apply, but you should also read through some of the initial settings like base file paths for storage, etc., not just the OFCL paths.
 
 ## Quick start
 
